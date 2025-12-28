@@ -12,31 +12,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MemberFormModal, MemberData } from "@/components/modals/MemberFormModal";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import { useToast } from "@/hooks/use-toast";
 
-const members = [
+const initialMembers: MemberData[] = [
   {
     id: 1,
     name: "Sarah Johnson",
     email: "sarah.j@email.com",
     phone: "+1 234 567 890",
     plan: "Premium",
-    status: "active" as const,
+    status: "active",
     joinDate: "Jan 15, 2024",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
   },
@@ -46,7 +39,7 @@ const members = [
     email: "m.chen@email.com",
     phone: "+1 234 567 891",
     plan: "Basic",
-    status: "active" as const,
+    status: "active",
     joinDate: "Feb 3, 2024",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
   },
@@ -56,7 +49,7 @@ const members = [
     email: "emily.r@email.com",
     phone: "+1 234 567 892",
     plan: "Premium",
-    status: "expired" as const,
+    status: "expired",
     joinDate: "Nov 20, 2023",
     avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
   },
@@ -66,7 +59,7 @@ const members = [
     email: "d.park@email.com",
     phone: "+1 234 567 893",
     plan: "Gold",
-    status: "active" as const,
+    status: "active",
     joinDate: "Mar 8, 2024",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
   },
@@ -76,7 +69,7 @@ const members = [
     email: "j.williams@email.com",
     phone: "+1 234 567 894",
     plan: "Basic",
-    status: "pending" as const,
+    status: "pending",
     joinDate: "Mar 12, 2024",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
   },
@@ -86,21 +79,56 @@ const members = [
     email: "r.thompson@email.com",
     phone: "+1 234 567 895",
     plan: "Premium",
-    status: "active" as const,
+    status: "active",
     joinDate: "Feb 28, 2024",
     avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop",
   },
 ];
 
 const Members = () => {
+  const { toast } = useToast();
+  const [members, setMembers] = useState<MemberData[]>(initialMembers);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<MemberData | null>(null);
+  const [deletingMember, setDeletingMember] = useState<MemberData | null>(null);
 
   const filteredMembers = members.filter(
     (member) =>
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSaveMember = (member: MemberData) => {
+    if (editingMember) {
+      setMembers(members.map((m) => (m.id === member.id ? member : m)));
+      toast({ title: "Member updated", description: `${member.name} has been updated successfully.` });
+    } else {
+      setMembers([...members, member]);
+      toast({ title: "Member added", description: `${member.name} has been added successfully.` });
+    }
+    setEditingMember(null);
+  };
+
+  const handleDeleteMember = () => {
+    if (deletingMember) {
+      setMembers(members.filter((m) => m.id !== deletingMember.id));
+      toast({ title: "Member deleted", description: `${deletingMember.name} has been removed.` });
+      setDeletingMember(null);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const openEditModal = (member: MemberData) => {
+    setEditingMember(member);
+    setIsFormModalOpen(true);
+  };
+
+  const openDeleteModal = (member: MemberData) => {
+    setDeletingMember(member);
+    setIsDeleteModalOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -112,64 +140,31 @@ const Members = () => {
             Manage your gym members and their subscriptions
           </p>
         </div>
-        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
-              <Plus className="w-4 h-4" />
-              Add Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Add New Member</DialogTitle>
-              <DialogDescription>
-                Fill in the details to register a new gym member.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="John" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="+1 234 567 890" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="plan">Membership Plan</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Basic - $29/month</SelectItem>
-                    <SelectItem value="gold">Gold - $49/month</SelectItem>
-                    <SelectItem value="premium">Premium - $79/month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button className="bg-primary text-primary-foreground">
-                Add Member
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button
+          onClick={() => { setEditingMember(null); setIsFormModalOpen(true); }}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Member
+        </Button>
       </div>
+
+      {/* Form Modal */}
+      <MemberFormModal
+        open={isFormModalOpen}
+        onOpenChange={setIsFormModalOpen}
+        member={editingMember}
+        onSave={handleSaveMember}
+      />
+
+      {/* Delete Modal */}
+      <DeleteConfirmModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Delete Member"
+        description={`Are you sure you want to delete ${deletingMember?.name}? This action cannot be undone.`}
+        onConfirm={handleDeleteMember}
+      />
 
       {/* Filters Bar */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
@@ -282,7 +277,12 @@ const Members = () => {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => openEditModal(member)}
+                      >
                         <Edit className="w-4 h-4 text-muted-foreground" />
                       </Button>
                       <DropdownMenu>
@@ -292,10 +292,16 @@ const Members = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Member</DropdownMenuItem>
-                          <DropdownMenuItem>Send Message</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem onClick={() => openEditModal(member)}>
+                            Edit Member
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast({ title: "Message sent", description: `Email sent to ${member.email}` })}>
+                            Send Message
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => openDeleteModal(member)}
+                          >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -320,12 +326,6 @@ const Members = () => {
             </Button>
             <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
               1
-            </Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <Button variant="outline" size="sm">
-              3
             </Button>
             <Button variant="outline" size="sm">
               Next

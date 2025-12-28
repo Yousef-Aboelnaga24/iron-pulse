@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Settings as SettingsIcon, User, Bell, Shield, Palette, Globe, Database, Mail, Save, Building } from "lucide-react";
+import { useState, useRef } from "react";
+import { Settings as SettingsIcon, User, Bell, Shield, Palette, Globe, Database, Mail, Save, Building, Upload } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,32 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAdmin } from "@/contexts/AdminContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { profile, updateProfile } = useAdmin();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [formData, setFormData] = useState({
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    email: profile.email,
+  });
+
+  const [gymSettings, setGymSettings] = useState({
+    gymName: "Iron Pulse Gym",
+    phone: "+1 (555) 123-4567",
+    email: "contact@ironpulsegym.com",
+    website: "www.ironpulsegym.com",
+    address: "123 Fitness Street, Muscle City, MC 12345",
+    timezone: "America/New_York (EST)",
+    language: "English (US)",
+    currency: "USD ($)",
+    dateFormat: "MM/DD/YYYY",
+  });
+
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -18,10 +41,74 @@ const Settings = () => {
     marketing: false,
   });
 
-  const handleSave = () => {
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateProfile({ avatar: reader.result as string });
+        toast({
+          title: "Photo updated",
+          description: "Your profile photo has been changed successfully.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = () => {
+    updateProfile({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+    });
+    toast({
+      title: "Profile saved",
+      description: "Your profile has been updated successfully.",
+    });
+  };
+
+  const handleSaveGeneral = () => {
     toast({
       title: "Settings saved",
-      description: "Your preferences have been updated successfully.",
+      description: "Gym settings have been updated successfully.",
+    });
+  };
+
+  const handleSaveNotifications = () => {
+    toast({
+      title: "Notifications updated",
+      description: "Your notification preferences have been saved.",
+    });
+  };
+
+  const handleUpdatePassword = () => {
+    if (passwords.new !== passwords.confirm) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (passwords.new.length < 8) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 8 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPasswords({ current: "", new: "", confirm: "" });
+    toast({
+      title: "Password updated",
+      description: "Your password has been changed successfully.",
     });
   };
 
@@ -35,10 +122,6 @@ const Settings = () => {
             Manage your gym system preferences and configurations.
           </p>
         </div>
-        <Button onClick={handleSave} className="gap-2">
-          <Save className="w-4 h-4" />
-          Save Changes
-        </Button>
       </div>
 
       {/* Settings Tabs */}
@@ -77,25 +160,50 @@ const Settings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="gymName">Gym Name</Label>
-                    <Input id="gymName" defaultValue="Iron Pulse Gym" />
+                    <Input
+                      id="gymName"
+                      value={gymSettings.gymName}
+                      onChange={(e) => setGymSettings({ ...gymSettings, gymName: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" defaultValue="+1 (555) 123-4567" />
+                    <Input
+                      id="phone"
+                      value={gymSettings.phone}
+                      onChange={(e) => setGymSettings({ ...gymSettings, phone: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Contact Email</Label>
-                    <Input id="email" type="email" defaultValue="contact@ironpulsegym.com" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={gymSettings.email}
+                      onChange={(e) => setGymSettings({ ...gymSettings, email: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="website">Website</Label>
-                    <Input id="website" defaultValue="www.ironpulsegym.com" />
+                    <Input
+                      id="website"
+                      value={gymSettings.website}
+                      onChange={(e) => setGymSettings({ ...gymSettings, website: e.target.value })}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
-                  <Input id="address" defaultValue="123 Fitness Street, Muscle City, MC 12345" />
+                  <Input
+                    id="address"
+                    value={gymSettings.address}
+                    onChange={(e) => setGymSettings({ ...gymSettings, address: e.target.value })}
+                  />
                 </div>
+                <Button onClick={handleSaveGeneral} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  Save Gym Settings
+                </Button>
               </CardContent>
             </Card>
 
@@ -111,21 +219,41 @@ const Settings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="timezone">Timezone</Label>
-                    <Input id="timezone" defaultValue="America/New_York (EST)" />
+                    <Input
+                      id="timezone"
+                      value={gymSettings.timezone}
+                      onChange={(e) => setGymSettings({ ...gymSettings, timezone: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="language">Language</Label>
-                    <Input id="language" defaultValue="English (US)" />
+                    <Input
+                      id="language"
+                      value={gymSettings.language}
+                      onChange={(e) => setGymSettings({ ...gymSettings, language: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency</Label>
-                    <Input id="currency" defaultValue="USD ($)" />
+                    <Input
+                      id="currency"
+                      value={gymSettings.currency}
+                      onChange={(e) => setGymSettings({ ...gymSettings, currency: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dateFormat">Date Format</Label>
-                    <Input id="dateFormat" defaultValue="MM/DD/YYYY" />
+                    <Input
+                      id="dateFormat"
+                      value={gymSettings.dateFormat}
+                      onChange={(e) => setGymSettings({ ...gymSettings, dateFormat: e.target.value })}
+                    />
                   </div>
                 </div>
+                <Button onClick={handleSaveGeneral} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  Save Regional Settings
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -143,32 +271,67 @@ const Settings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
-                  <User className="w-10 h-10 text-primary" />
-                </div>
+                <Avatar className="w-20 h-20 border-2 border-primary/30">
+                  <AvatarImage src={profile.avatar} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                    {profile.firstName[0]}{profile.lastName[0]}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
-                  <Button variant="outline" size="sm">Change Photo</Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handlePhotoChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Change Photo
+                  </Button>
                   <p className="text-sm text-muted-foreground mt-2">JPG, PNG or GIF. Max 2MB.</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Smith" />
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="adminEmail">Email Address</Label>
-                  <Input id="adminEmail" type="email" defaultValue="john.smith@ironpulsegym.com" />
+                  <Input
+                    id="adminEmail"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Input id="role" defaultValue="Super Admin" disabled />
+                  <Input id="role" value={profile.role} disabled />
                 </div>
               </div>
+              <Button onClick={handleSaveProfile} className="gap-2">
+                <Save className="w-4 h-4" />
+                Save Profile
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -208,6 +371,10 @@ const Settings = () => {
                   />
                 </div>
               ))}
+              <Button onClick={handleSaveNotifications} className="gap-2">
+                <Save className="w-4 h-4" />
+                Save Notifications
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -227,19 +394,37 @@ const Settings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" placeholder="••••••••" />
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                    />
                   </div>
                   <div></div>
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" placeholder="••••••••" />
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" placeholder="••••••••" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                    />
                   </div>
                 </div>
-                <Button variant="outline">Update Password</Button>
+                <Button variant="outline" onClick={handleUpdatePassword}>Update Password</Button>
               </CardContent>
             </Card>
 
@@ -257,21 +442,39 @@ const Settings = () => {
                     <p className="font-medium text-foreground">Two-Factor Authentication</p>
                     <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                   </div>
-                  <Button variant="outline" size="sm">Enable</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toast({ title: "2FA Enabled", description: "Two-factor authentication is now active." })}
+                  >
+                    Enable
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
                   <div>
                     <p className="font-medium text-foreground">Export All Data</p>
                     <p className="text-sm text-muted-foreground">Download a copy of your data</p>
                   </div>
-                  <Button variant="outline" size="sm">Export</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toast({ title: "Export Started", description: "Your data export will be ready shortly." })}
+                  >
+                    Export
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
                   <div>
                     <p className="font-medium text-foreground">Active Sessions</p>
                     <p className="text-sm text-muted-foreground">Manage devices logged into your account</p>
                   </div>
-                  <Button variant="outline" size="sm">View All</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toast({ title: "Sessions", description: "You are currently logged in on 1 device." })}
+                  >
+                    View All
+                  </Button>
                 </div>
               </CardContent>
             </Card>

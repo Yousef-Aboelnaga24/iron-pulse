@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, Star, Mail, Phone, Edit, MoreVertical } from "lucide-react";
+import { Search, Plus, Star, Mail, Phone, Edit, MoreVertical, Trash2 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TrainerFormModal, TrainerData } from "@/components/modals/TrainerFormModal";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import { useToast } from "@/hooks/use-toast";
 
-const trainers = [
+const initialTrainers: TrainerData[] = [
   {
     id: 1,
     name: "Marcus Williams",
@@ -21,7 +24,7 @@ const trainers = [
     specialties: ["Strength Training", "HIIT", "CrossFit"],
     rating: 4.9,
     sessions: 156,
-    status: "active" as const,
+    status: "active",
     avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop",
   },
   {
@@ -32,7 +35,7 @@ const trainers = [
     specialties: ["Yoga", "Pilates", "Meditation"],
     rating: 4.8,
     sessions: 203,
-    status: "active" as const,
+    status: "active",
     avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop",
   },
   {
@@ -43,7 +46,7 @@ const trainers = [
     specialties: ["Cardio", "Boxing", "Weight Loss"],
     rating: 4.7,
     sessions: 98,
-    status: "active" as const,
+    status: "active",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
   },
   {
@@ -54,7 +57,7 @@ const trainers = [
     specialties: ["Zumba", "Dance Fitness", "Aerobics"],
     rating: 4.9,
     sessions: 187,
-    status: "active" as const,
+    status: "active",
     avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop",
   },
   {
@@ -65,7 +68,7 @@ const trainers = [
     specialties: ["Personal Training", "Nutrition"],
     rating: 4.6,
     sessions: 75,
-    status: "inactive" as const,
+    status: "inactive",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
   },
   {
@@ -76,20 +79,56 @@ const trainers = [
     specialties: ["Spinning", "Endurance", "Cardio"],
     rating: 4.8,
     sessions: 142,
-    status: "active" as const,
+    status: "active",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
   },
 ];
 
 const Trainers = () => {
+  const { toast } = useToast();
+  const [trainers, setTrainers] = useState<TrainerData[]>(initialTrainers);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editingTrainer, setEditingTrainer] = useState<TrainerData | null>(null);
+  const [deletingTrainer, setDeletingTrainer] = useState<TrainerData | null>(null);
 
   const filteredTrainers = trainers.filter(
     (trainer) =>
       trainer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trainer.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  const handleSaveTrainer = (trainer: TrainerData) => {
+    if (editingTrainer) {
+      setTrainers(trainers.map((t) => (t.id === trainer.id ? trainer : t)));
+      toast({ title: "Trainer updated", description: `${trainer.name} has been updated successfully.` });
+    } else {
+      setTrainers([...trainers, trainer]);
+      toast({ title: "Trainer added", description: `${trainer.name} has been added successfully.` });
+    }
+    setEditingTrainer(null);
+  };
+
+  const handleDeleteTrainer = () => {
+    if (deletingTrainer) {
+      setTrainers(trainers.filter((t) => t.id !== deletingTrainer.id));
+      toast({ title: "Trainer removed", description: `${deletingTrainer.name} has been removed.` });
+      setDeletingTrainer(null);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const openEditModal = (trainer: TrainerData) => {
+    setEditingTrainer(trainer);
+    setIsFormModalOpen(true);
+  };
+
+  const openDeleteModal = (trainer: TrainerData) => {
+    setDeletingTrainer(trainer);
+    setIsDeleteModalOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -101,11 +140,31 @@ const Trainers = () => {
             Manage your gym trainers and their schedules
           </p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+        <Button
+          onClick={() => { setEditingTrainer(null); setIsFormModalOpen(true); }}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+        >
           <Plus className="w-4 h-4" />
           Add Trainer
         </Button>
       </div>
+
+      {/* Form Modal */}
+      <TrainerFormModal
+        open={isFormModalOpen}
+        onOpenChange={setIsFormModalOpen}
+        trainer={editingTrainer}
+        onSave={handleSaveTrainer}
+      />
+
+      {/* Delete Modal */}
+      <DeleteConfirmModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Remove Trainer"
+        description={`Are you sure you want to remove ${deletingTrainer?.name}? This action cannot be undone.`}
+        onConfirm={handleDeleteTrainer}
+      />
 
       {/* Filters Bar */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
@@ -161,10 +220,14 @@ const Trainers = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Edit Trainer</DropdownMenuItem>
-                    <DropdownMenuItem>View Schedule</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openEditModal(trainer)}>Edit Trainer</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => toast({ title: "Schedule", description: `Viewing schedule for ${trainer.name}` })}>
+                      View Schedule
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => openDeleteModal(trainer)}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -209,9 +272,13 @@ const Trainers = () => {
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full mt-4 hover:bg-primary hover:text-primary-foreground transition-colors">
+              <Button
+                variant="outline"
+                className="w-full mt-4 hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => openEditModal(trainer)}
+              >
                 <Edit className="w-4 h-4 mr-2" />
-                View Profile
+                Edit Profile
               </Button>
             </div>
           ))}
@@ -278,7 +345,7 @@ const Trainers = () => {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(trainer)}>
                           <Edit className="w-4 h-4 text-muted-foreground" />
                         </Button>
                         <DropdownMenu>
@@ -288,9 +355,11 @@ const Trainers = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Profile</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Trainer</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEditModal(trainer)}>Edit Trainer</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => openDeleteModal(trainer)}>
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remove
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

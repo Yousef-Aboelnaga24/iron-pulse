@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Plus, Calendar as CalendarIcon, Clock, Users, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Clock, Users, MapPin, ChevronLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { SessionFormModal, SessionData } from "@/components/modals/SessionFormModal";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
+import { useToast } from "@/hooks/use-toast";
 
-const sessions = [
+const initialSessions: SessionData[] = [
   {
     id: 1,
     name: "Morning Yoga Flow",
@@ -18,7 +21,7 @@ const sessions = [
     location: "Studio A",
     capacity: 20,
     booked: 18,
-    status: "upcoming" as const,
+    status: "upcoming",
   },
   {
     id: 2,
@@ -31,7 +34,7 @@ const sessions = [
     location: "Main Floor",
     capacity: 15,
     booked: 15,
-    status: "full" as const,
+    status: "full",
   },
   {
     id: 3,
@@ -44,7 +47,7 @@ const sessions = [
     location: "Weight Room",
     capacity: 12,
     booked: 8,
-    status: "available" as const,
+    status: "available",
   },
   {
     id: 4,
@@ -57,7 +60,7 @@ const sessions = [
     location: "Spin Room",
     capacity: 25,
     booked: 20,
-    status: "upcoming" as const,
+    status: "upcoming",
   },
   {
     id: 5,
@@ -70,7 +73,7 @@ const sessions = [
     location: "Studio B",
     capacity: 30,
     booked: 24,
-    status: "upcoming" as const,
+    status: "upcoming",
   },
   {
     id: 6,
@@ -83,15 +86,62 @@ const sessions = [
     location: "Combat Zone",
     capacity: 10,
     booked: 6,
-    status: "available" as const,
+    status: "available",
   },
 ];
 
 const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const Sessions = () => {
+  const { toast } = useToast();
+  const [sessions, setSessions] = useState<SessionData[]>(initialSessions);
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedDay, setSelectedDay] = useState(2); // Wednesday
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<SessionData | null>(null);
+  const [deletingSession, setDeletingSession] = useState<SessionData | null>(null);
+
+  const handleSaveSession = (session: SessionData) => {
+    if (editingSession) {
+      setSessions(sessions.map((s) => (s.id === session.id ? session : s)));
+      toast({ title: "Session updated", description: `${session.name} has been updated successfully.` });
+    } else {
+      setSessions([...sessions, session]);
+      toast({ title: "Session created", description: `${session.name} has been created successfully.` });
+    }
+    setEditingSession(null);
+  };
+
+  const handleDeleteSession = () => {
+    if (deletingSession) {
+      setSessions(sessions.filter((s) => s.id !== deletingSession.id));
+      toast({ title: "Session deleted", description: `${deletingSession.name} has been removed.` });
+      setDeletingSession(null);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
+  const handleBookSession = (session: SessionData) => {
+    if (session.booked < session.capacity) {
+      const updatedSession = { ...session, booked: session.booked + 1 };
+      if (updatedSession.booked === updatedSession.capacity) {
+        updatedSession.status = "full";
+      }
+      setSessions(sessions.map((s) => (s.id === session.id ? updatedSession : s)));
+      toast({ title: "Booking confirmed", description: `You have been booked for ${session.name}.` });
+    }
+  };
+
+  const openEditModal = (session: SessionData) => {
+    setEditingSession(session);
+    setIsFormModalOpen(true);
+  };
+
+  const openDeleteModal = (session: SessionData) => {
+    setDeletingSession(session);
+    setIsDeleteModalOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -101,11 +151,31 @@ const Sessions = () => {
           <h1 className="text-3xl font-bold text-foreground">Sessions</h1>
           <p className="text-muted-foreground mt-1">Schedule and manage gym sessions</p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+        <Button
+          onClick={() => { setEditingSession(null); setIsFormModalOpen(true); }}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+        >
           <Plus className="w-4 h-4" />
           Create Session
         </Button>
       </div>
+
+      {/* Form Modal */}
+      <SessionFormModal
+        open={isFormModalOpen}
+        onOpenChange={setIsFormModalOpen}
+        session={editingSession}
+        onSave={handleSaveSession}
+      />
+
+      {/* Delete Modal */}
+      <DeleteConfirmModal
+        open={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title="Delete Session"
+        description={`Are you sure you want to delete ${deletingSession?.name}? All bookings will be cancelled.`}
+        onConfirm={handleDeleteSession}
+      />
 
       {/* View Toggle & Week Navigation */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
@@ -130,7 +200,7 @@ const Sessions = () => {
 
         {/* Week Navigation */}
         <div className="flex items-center gap-4 ml-auto">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => setSelectedDay(Math.max(0, selectedDay - 1))}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <div className="flex gap-2">
@@ -148,7 +218,7 @@ const Sessions = () => {
               </button>
             ))}
           </div>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => setSelectedDay(Math.min(6, selectedDay + 1))}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -229,19 +299,29 @@ const Sessions = () => {
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                View Details
+              <Button variant="outline" size="sm" onClick={() => openEditModal(session)}>
+                <Edit className="w-4 h-4 mr-1" />
+                Edit
               </Button>
               <Button
                 size="sm"
                 disabled={session.status === "full"}
+                onClick={() => handleBookSession(session)}
                 className={
                   session.status === "full"
                     ? "bg-muted text-muted-foreground"
                     : "bg-primary text-primary-foreground"
                 }
               >
-                {session.status === "full" ? "Waitlist" : "Book Now"}
+                {session.status === "full" ? "Full" : "Book Now"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-destructive hover:text-destructive"
+                onClick={() => openDeleteModal(session)}
+              >
+                <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           </div>
