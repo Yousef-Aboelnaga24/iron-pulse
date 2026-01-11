@@ -1,95 +1,159 @@
 import { useState } from "react";
-import { Plus, Check, X, Edit, MoreVertical, Users, Zap } from "lucide-react";
+import { Plus, Check, X, Edit, MoreVertical, Users, Zap, Trash2, Star } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePlans, Plan, PlanFeature } from "@/contexts/PlansContext";
+import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmModal } from "@/components/modals/DeleteConfirmModal";
 
-const plans = [
-  {
-    id: 1,
-    name: "Basic",
-    price: 29,
-    period: "month",
-    description: "Perfect for beginners starting their fitness journey",
-    features: [
-      { name: "Access to gym equipment", included: true },
-      { name: "Locker room access", included: true },
-      { name: "Basic fitness assessment", included: true },
-      { name: "Group classes", included: false },
-      { name: "Personal training sessions", included: false },
-      { name: "Nutrition consultation", included: false },
-    ],
-    activeMembers: 856,
-    status: "active" as const,
-    popular: false,
-  },
-  {
-    id: 2,
-    name: "Gold",
-    price: 49,
-    period: "month",
-    description: "Great for regular gym-goers who want more variety",
-    features: [
-      { name: "Access to gym equipment", included: true },
-      { name: "Locker room access", included: true },
-      { name: "Basic fitness assessment", included: true },
-      { name: "Group classes", included: true },
-      { name: "Personal training sessions", included: false },
-      { name: "Nutrition consultation", included: false },
-    ],
-    activeMembers: 624,
-    status: "active" as const,
-    popular: false,
-  },
-  {
-    id: 3,
-    name: "Premium",
-    price: 79,
-    period: "month",
-    description: "The ultimate fitness experience with all amenities",
-    features: [
-      { name: "Access to gym equipment", included: true },
-      { name: "Locker room access", included: true },
-      { name: "Basic fitness assessment", included: true },
-      { name: "Group classes", included: true },
-      { name: "2 Personal training sessions/month", included: true },
-      { name: "Nutrition consultation", included: true },
-    ],
-    activeMembers: 412,
-    status: "active" as const,
-    popular: true,
-  },
-  {
-    id: 4,
-    name: "Student",
-    price: 19,
-    period: "month",
-    description: "Special discounted rate for students with valid ID",
-    features: [
-      { name: "Access to gym equipment", included: true },
-      { name: "Locker room access", included: true },
-      { name: "Basic fitness assessment", included: true },
-      { name: "Limited group classes", included: true },
-      { name: "Personal training sessions", included: false },
-      { name: "Nutrition consultation", included: false },
-    ],
-    activeMembers: 264,
-    status: "active" as const,
-    popular: false,
-  },
+const defaultFeatures: PlanFeature[] = [
+  { name: "Access to gym equipment", included: false },
+  { name: "Locker room access", included: false },
+  { name: "Basic fitness assessment", included: false },
+  { name: "Group classes", included: false },
+  { name: "Personal training sessions", included: false },
+  { name: "Nutrition consultation", included: false },
 ];
 
 const Plans = () => {
-  const [planStatuses, setPlanStatuses] = useState<Record<number, boolean>>(
-    Object.fromEntries(plans.map((p) => [p.id, p.status === "active"]))
-  );
+  // Use shared PlansContext for real-time sync with Landing Page
+  const { plans, addPlan, updatePlan, deletePlan, togglePlanStatus } = usePlans();
+  const { toast } = useToast();
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    price: 0,
+    period: "month",
+    duration: 1,
+    description: "",
+    features: defaultFeatures.map((f) => ({ ...f })),
+    popular: false,
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      price: 0,
+      period: "month",
+      duration: 1,
+      description: "",
+      features: defaultFeatures.map((f) => ({ ...f, included: false })),
+      popular: false,
+    });
+    setEditingPlan(null);
+  };
+
+  const openAddForm = () => {
+    resetForm();
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (plan: Plan) => {
+    setEditingPlan(plan);
+    setFormData({
+      name: plan.name,
+      price: plan.price,
+      period: plan.period,
+      duration: plan.duration,
+      description: plan.description,
+      features: plan.features.map((f) => ({ ...f })),
+      popular: plan.popular,
+    });
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.name || formData.price <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editingPlan) {
+      // TODO: Backend integration - update plan via API
+      updatePlan(editingPlan.id, {
+        ...formData,
+        status: editingPlan.status,
+        activeMembers: editingPlan.activeMembers,
+      });
+      toast({
+        title: "Plan Updated",
+        description: `${formData.name} plan has been updated successfully.`,
+      });
+    } else {
+      // TODO: Backend integration - create plan via API
+      addPlan({
+        ...formData,
+        status: "active",
+        activeMembers: 0,
+      });
+      toast({
+        title: "Plan Created",
+        description: `${formData.name} plan has been created and is now visible on the landing page.`,
+      });
+    }
+
+    setIsFormOpen(false);
+    resetForm();
+  };
+
+  const handleDelete = () => {
+    if (deletingPlan) {
+      // TODO: Backend integration - delete plan via API
+      deletePlan(deletingPlan.id);
+      toast({
+        title: "Plan Deleted",
+        description: `${deletingPlan.name} plan has been removed from the landing page.`,
+      });
+      setIsDeleteOpen(false);
+      setDeletingPlan(null);
+    }
+  };
+
+  const handleFeatureToggle = (index: number) => {
+    const newFeatures = [...formData.features];
+    newFeatures[index].included = !newFeatures[index].included;
+    setFormData({ ...formData, features: newFeatures });
+  };
+
+  const handleToggleStatus = (plan: Plan) => {
+    togglePlanStatus(plan.id);
+    toast({
+      title: "Status Updated",
+      description: `${plan.name} is now ${plan.status === "active" ? "inactive" : "active"}. ${
+        plan.status === "active" 
+          ? "It will no longer appear on the landing page." 
+          : "It is now visible on the landing page."
+      }`,
+    });
+  };
 
   return (
     <DashboardLayout>
@@ -101,7 +165,10 @@ const Plans = () => {
             Create and manage membership plans for your gym
           </p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+        <Button 
+          onClick={openAddForm}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+        >
           <Plus className="w-4 h-4" />
           Create Plan
         </Button>
@@ -114,7 +181,7 @@ const Plans = () => {
             key={plan.id}
             className={`stat-card card-glow relative opacity-0 animate-fade-in ${
               plan.popular ? "ring-2 ring-primary" : ""
-            }`}
+            } ${plan.status === "inactive" ? "opacity-60" : ""}`}
             style={{ animationDelay: `${(index + 1) * 100}ms` }}
           >
             {plan.popular && (
@@ -138,12 +205,24 @@ const Plans = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => openEditForm(plan)}>
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Plan
                   </DropdownMenuItem>
-                  <DropdownMenuItem>View Members</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">Delete Plan</DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Users className="w-4 h-4 mr-2" />
+                    View Members
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setDeletingPlan(plan);
+                      setIsDeleteOpen(true);
+                    }}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Plan
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -184,24 +263,139 @@ const Plans = () => {
                   <Users className="w-4 h-4" />
                   <span>{plan.activeMembers} members</span>
                 </div>
-                <StatusBadge variant={planStatuses[plan.id] ? "active" : "inactive"}>
-                  {planStatuses[plan.id] ? "Active" : "Inactive"}
+                <StatusBadge variant={plan.status === "active" ? "active" : "inactive"}>
+                  {plan.status === "active" ? "Active" : "Inactive"}
                 </StatusBadge>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plan Status</span>
                 <Switch
-                  checked={planStatuses[plan.id]}
-                  onCheckedChange={(checked) =>
-                    setPlanStatuses((prev) => ({ ...prev, [plan.id]: checked }))
-                  }
+                  checked={plan.status === "active"}
+                  onCheckedChange={() => handleToggleStatus(plan)}
                 />
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Plan Form Modal */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPlan ? "Edit Plan" : "Create New Plan"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Plan Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                placeholder="e.g., Premium"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price ($) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      price: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (months)</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="1"
+                  value={formData.duration}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      duration: parseInt(e.target.value) || 1,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Brief description of this plan..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Features</Label>
+              <div className="space-y-2 border border-border rounded-md p-3">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={feature.included}
+                      onCheckedChange={() => handleFeatureToggle(index)}
+                    />
+                    <span className="text-sm">{feature.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={formData.popular}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, popular: !!checked })
+                }
+              />
+              <Label className="cursor-pointer flex items-center gap-2">
+                <Star className="w-4 h-4 text-primary" />
+                Mark as Most Popular
+              </Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>
+              {editingPlan ? "Update Plan" : "Create Plan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onConfirm={handleDelete}
+        title="Delete Plan"
+        description={`Are you sure you want to delete the "${deletingPlan?.name}" plan? This will also remove it from the landing page. This action cannot be undone.`}
+      />
     </DashboardLayout>
   );
 };
