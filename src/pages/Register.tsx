@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Dumbbell, Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
+import { Dumbbell, Eye, EyeOff, ArrowLeft, Check, Mail, Lock, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{
     name?: string;
@@ -74,6 +75,7 @@ const Register = () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     
     // TODO: Backend integration - create user via API
+    // Register checks for duplicate email - "email already exists" ONLY shows here
     const result = register(email, password, name);
     
     if (result.success) {
@@ -96,146 +98,194 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Glow Effects */}
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+      
+      <div className="w-full max-w-md relative z-10">
         {/* Back to Home */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Home
         </Link>
 
         {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Dumbbell className="w-7 h-7 text-primary-foreground" />
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+            <Dumbbell className="w-8 h-8 text-primary-foreground" />
           </div>
-          <span className="text-2xl font-bold text-foreground">
-            IRON<span className="text-primary">PULSE</span>
+          <span className="text-3xl font-extrabold text-foreground">
+            IRON<span className="text-primary glow-text">PULSE</span>
           </span>
         </div>
 
-        {/* Form Card */}
-        <div className="stat-card card-glow p-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Create Account</h1>
-          <p className="text-muted-foreground mb-6">
-            Join Iron Pulse and start your fitness journey
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={errors.name ? "border-destructive" : ""}
-              />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={errors.password ? "border-destructive" : ""}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-              
-              {/* Password Requirements */}
-              {password && (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div className={`flex items-center gap-1 text-xs ${passwordChecks.length ? "text-primary" : "text-muted-foreground"}`}>
-                    <Check className="w-3 h-3" />
-                    8+ characters
-                  </div>
-                  <div className={`flex items-center gap-1 text-xs ${passwordChecks.uppercase ? "text-primary" : "text-muted-foreground"}`}>
-                    <Check className="w-3 h-3" />
-                    Uppercase
-                  </div>
-                  <div className={`flex items-center gap-1 text-xs ${passwordChecks.lowercase ? "text-primary" : "text-muted-foreground"}`}>
-                    <Check className="w-3 h-3" />
-                    Lowercase
-                  </div>
-                  <div className={`flex items-center gap-1 text-xs ${passwordChecks.number ? "text-primary" : "text-muted-foreground"}`}>
-                    <Check className="w-3 h-3" />
-                    Number
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={errors.confirmPassword ? "border-destructive" : ""}
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating account..." : "Create Account"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign In
-              </Link>
+        {/* Glassmorphism Form Card */}
+        <div className="relative backdrop-blur-xl bg-card/60 border border-border/50 rounded-2xl p-8 shadow-2xl">
+          {/* Card Glow Effect */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+          
+          <div className="relative">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
+            <p className="text-muted-foreground mb-8">
+              Join Iron Pulse and start your fitness journey
             </p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name Field with Icon */}
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-foreground/90">Full Name</Label>
+                <div className="relative group">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={`pl-11 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all ${
+                      errors.name ? "border-destructive focus:border-destructive" : ""
+                    }`}
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-sm text-destructive animate-fade-in">{errors.name}</p>
+                )}
+              </div>
+
+              {/* Email Field with Icon */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground/90">Email</Label>
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`pl-11 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all ${
+                      errors.email ? "border-destructive focus:border-destructive" : ""
+                    }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive animate-fade-in">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Password Field with Icon */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground/90">Password</Label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`pl-11 pr-11 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all ${
+                      errors.password ? "border-destructive focus:border-destructive" : ""
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>
+                )}
+                
+                {/* Password Requirements - Animated */}
+                {password && (
+                  <div className="grid grid-cols-2 gap-2 mt-3 animate-fade-in">
+                    {[
+                      { check: passwordChecks.length, label: "8+ characters" },
+                      { check: passwordChecks.uppercase, label: "Uppercase" },
+                      { check: passwordChecks.lowercase, label: "Lowercase" },
+                      { check: passwordChecks.number, label: "Number" },
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-2 text-xs transition-colors duration-300 ${
+                          item.check ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${
+                          item.check ? "bg-primary/20" : "bg-muted"
+                        }`}>
+                          <Check className={`w-3 h-3 transition-transform duration-300 ${
+                            item.check ? "scale-100" : "scale-0"
+                          }`} />
+                        </div>
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-foreground/90">Confirm Password</Label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`pl-11 pr-11 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all ${
+                      errors.confirmPassword ? "border-destructive focus:border-destructive" : ""
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive animate-fade-in">{errors.confirmPassword}</p>
+                )}
+              </div>
+
+              {/* Animated Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] mt-6"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-muted-foreground">
+                Already have an account?{" "}
+                <Link to="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors hover:underline underline-offset-4">
+                  Sign In
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
