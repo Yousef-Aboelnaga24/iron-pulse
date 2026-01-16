@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Dumbbell, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Dumbbell, Eye, EyeOff, ArrowLeft, Mail, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, isSubscribed } = useUser();
+  const { login } = useUser();
   const { toast } = useToast();
   
   const [email, setEmail] = useState("");
@@ -48,26 +48,29 @@ const Login = () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     
     // TODO: Backend integration - authenticate via API
+    // Sign In only validates email + password, never checks if email exists
+    // Admin login is checked FIRST in the login function
     const result = login(email, password);
     
     if (result.success) {
       toast({
         title: "Welcome back!",
-        description: "You have successfully logged in.",
+        description: result.role === "admin" 
+          ? "Redirecting to Admin Dashboard..." 
+          : "You have successfully logged in.",
       });
       
-      // Role-based redirect
-      // Admin → Admin Dashboard, User → Landing Page
+      // Role-based redirect: Admin → Dashboard, User → Landing Page
       if (result.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/");
       }
     } else {
-      // Sign In only shows generic "Invalid email or password" - never "email already exists"
+      // Sign In only shows "Invalid email or password" - NEVER "email already exists"
       toast({
         title: "Login failed",
-        description: result.error || "Invalid email or password. Please try again.",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     }
@@ -76,104 +79,135 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Glow Effects */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+      
+      <div className="w-full max-w-md relative z-10">
         {/* Back to Home */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Home
         </Link>
 
         {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Dumbbell className="w-7 h-7 text-primary-foreground" />
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+            <Dumbbell className="w-8 h-8 text-primary-foreground" />
           </div>
-          <span className="text-2xl font-bold text-foreground">
-            IRON<span className="text-primary">PULSE</span>
+          <span className="text-3xl font-extrabold text-foreground">
+            IRON<span className="text-primary glow-text">PULSE</span>
           </span>
         </div>
 
-        {/* Form Card */}
-        <div className="stat-card card-glow p-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground mb-6">
-            Sign in to access your account
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={errors.password ? "border-destructive" : ""}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">
-                Register
-              </Link>
+        {/* Glassmorphism Form Card */}
+        <div className="relative backdrop-blur-xl bg-card/60 border border-border/50 rounded-2xl p-8 shadow-2xl">
+          {/* Card Glow Effect */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+          
+          <div className="relative">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground mb-8">
+              Sign in to access your account
             </p>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Field with Icon */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-foreground/90">Email</Label>
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`pl-11 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all ${
+                      errors.email ? "border-destructive focus:border-destructive" : ""
+                    }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive flex items-center gap-1 animate-fade-in">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Password Field with Icon */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground/90">Password</Label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`pl-11 pr-11 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all ${
+                      errors.password ? "border-destructive focus:border-destructive" : ""
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive flex items-center gap-1 animate-fade-in">
+                    {errors.password}
+                  </p>
+                )}
+              </div>
+
+              {/* Animated Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/register" className="text-primary hover:text-primary/80 font-semibold transition-colors hover:underline underline-offset-4">
+                  Register
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 p-4 rounded-lg bg-secondary/50 border border-border space-y-2">
+        <div className="mt-6 p-4 rounded-xl bg-secondary/30 backdrop-blur-sm border border-border/30 space-y-2">
           <p className="text-sm text-muted-foreground text-center">
-            <strong>Admin:</strong> admin@ironpulse.com / admin123
+            <span className="text-primary font-semibold">Admin:</span> admin@ironpulse.com / admin123
           </p>
           <p className="text-sm text-muted-foreground text-center">
-            <strong>User:</strong> Register a new account to test the flow
+            <span className="text-primary font-semibold">User:</span> Register a new account to test
           </p>
         </div>
       </div>

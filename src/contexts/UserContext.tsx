@@ -94,12 +94,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = (email: string, password: string): { success: boolean; role: UserRole; error?: string } => {
-    // Check for admin login first
+    // IMPORTANT: Check for admin login FIRST before checking regular users
+    // Admin credentials: admin@ironpulse.com / admin123
     if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+      // Load persisted admin profile if exists
+      const savedAdminProfile = localStorage.getItem("ironpulse_admin_profile");
+      const adminProfile = savedAdminProfile ? JSON.parse(savedAdminProfile) : {};
+      
       const adminUser: User = {
         id: "admin_1",
         email: ADMIN_CREDENTIALS.email,
-        name: ADMIN_CREDENTIALS.name,
+        name: adminProfile.name || ADMIN_CREDENTIALS.name,
+        avatar: adminProfile.avatar,
         role: "admin",
       };
       setUser(adminUser);
@@ -195,14 +201,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const updatedUser = { ...user, ...updates };
     setUser(updatedUser);
 
-    // Also update in the users list for persistence
+    // Persist changes based on role
+    // TODO: Backend integration - update profile via API
     if (user.role === "user") {
+      // Update in the users list for regular users
       const existingUsers = JSON.parse(localStorage.getItem("ironpulse_users") || "[]");
       const userIndex = existingUsers.findIndex((u: any) => u.id === user.id);
       if (userIndex !== -1) {
         existingUsers[userIndex] = { ...existingUsers[userIndex], ...updates };
         localStorage.setItem("ironpulse_users", JSON.stringify(existingUsers));
       }
+    } else if (user.role === "admin") {
+      // Store admin profile separately for persistence
+      localStorage.setItem("ironpulse_admin_profile", JSON.stringify(updates));
     }
   };
 
