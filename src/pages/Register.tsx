@@ -74,9 +74,9 @@ const Register = () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     
     // TODO: Backend integration - create user via API
-    const success = register(email, password, name);
+    const result = register(email, password, name);
     
-    if (success) {
+    if (result.success) {
       toast({
         title: "Registration successful!",
         description: "Welcome to Iron Pulse! Please choose a membership plan.",
@@ -84,9 +84,10 @@ const Register = () => {
       // Redirect to landing page (not dashboard) - user is registered but not subscribed
       navigate("/");
     } else {
+      // "Email already exists" error should ONLY show during registration
       toast({
         title: "Registration failed",
-        description: "This email is already registered. Please try logging in.",
+        description: result.error || "This email is already registered. Please try logging in.",
         variant: "destructive",
       });
     }

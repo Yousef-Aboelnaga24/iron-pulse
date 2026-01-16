@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import PlanDetails from "./pages/PlanDetails";
 import Subscribe from "./pages/Subscribe";
 import UserDashboard from "./pages/UserDashboard";
+import Profile from "./pages/Profile";
 
 // Admin pages
 import Dashboard from "./pages/Dashboard";
@@ -46,6 +47,7 @@ const App = () => (
                 <Route path="/plan/:id" element={<PlanDetails />} />
                 <Route path="/subscribe/:id" element={<Subscribe />} />
                 <Route path="/user-dashboard" element={<UserDashboard />} />
+                <Route path="/profile" element={<Profile />} />
                 
                 {/* Admin Routes - Protected, only accessible by admin users */}
                 <Route path="/admin" element={<ProtectedAdminRoute><Dashboard /></ProtectedAdminRoute>} />

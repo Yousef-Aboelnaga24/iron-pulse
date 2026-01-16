@@ -38,10 +38,11 @@ interface UserContextType {
   isLoggedIn: boolean;
   isSubscribed: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => { success: boolean; role: UserRole };
-  register: (email: string, password: string, name: string) => boolean;
+  login: (email: string, password: string) => { success: boolean; role: UserRole; error?: string };
+  register: (email: string, password: string, name: string) => { success: boolean; error?: string };
   logout: () => void;
   subscribe: (subscriptionData: Omit<Subscription, "id" | "status">) => void;
+  updateProfile: (updates: { name?: string; avatar?: string }) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -92,7 +93,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     name: "Admin User",
   };
 
-  const login = (email: string, password: string): { success: boolean; role: UserRole } => {
+  const login = (email: string, password: string): { success: boolean; role: UserRole; error?: string } => {
     // Check for admin login first
     if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
       const adminUser: User = {
@@ -105,37 +106,40 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       return { success: true, role: "admin" };
     }
 
-    // Regular user login
+    // Regular user login - only validate email + password
     const existingUsers = JSON.parse(localStorage.getItem("ironpulse_users") || "[]");
     const foundUser = existingUsers.find((u: any) => u.email === email);
     
-    if (foundUser && foundUser.password === password) {
-      const userData: User = {
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-        avatar: foundUser.avatar,
-        role: "user",
-      };
-      setUser(userData);
-      
-      // Load subscription if exists
-      const userSubscription = localStorage.getItem(`subscription_${foundUser.id}`);
-      if (userSubscription) {
-        setSubscription(JSON.parse(userSubscription));
-      }
-      return { success: true, role: "user" };
+    // If user not found or password doesn't match - generic error (no "email exists" message)
+    if (!foundUser || foundUser.password !== password) {
+      return { success: false, role: "user", error: "Invalid email or password" };
     }
-    return { success: false, role: "user" };
+
+    // User found and password matches
+    const userData: User = {
+      id: foundUser.id,
+      email: foundUser.email,
+      name: foundUser.name,
+      avatar: foundUser.avatar,
+      role: "user",
+    };
+    setUser(userData);
+    
+    // Load subscription if exists
+    const userSubscription = localStorage.getItem(`subscription_${foundUser.id}`);
+    if (userSubscription) {
+      setSubscription(JSON.parse(userSubscription));
+    }
+    return { success: true, role: "user" };
   };
 
-  const register = (email: string, password: string, name: string): boolean => {
+  const register = (email: string, password: string, name: string): { success: boolean; error?: string } => {
     // TODO: Backend integration - create user via API
     const existingUsers = JSON.parse(localStorage.getItem("ironpulse_users") || "[]");
     
-    // Check if email already exists
+    // Check if email already exists - this is where "email already exists" should show
     if (existingUsers.find((u: any) => u.email === email)) {
-      return false;
+      return { success: false, error: "This email is already registered" };
     }
     
     const newUser = {
@@ -159,7 +163,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
     setUser(userData);
     
-    return true;
+    return { success: true };
   };
 
   const logout = () => {
@@ -185,6 +189,23 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateProfile = (updates: { name?: string; avatar?: string }) => {
+    if (!user) return;
+
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+
+    // Also update in the users list for persistence
+    if (user.role === "user") {
+      const existingUsers = JSON.parse(localStorage.getItem("ironpulse_users") || "[]");
+      const userIndex = existingUsers.findIndex((u: any) => u.id === user.id);
+      if (userIndex !== -1) {
+        existingUsers[userIndex] = { ...existingUsers[userIndex], ...updates };
+        localStorage.setItem("ironpulse_users", JSON.stringify(existingUsers));
+      }
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -197,6 +218,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         register,
         logout,
         subscribe,
+        updateProfile,
       }}
     >
       {children}

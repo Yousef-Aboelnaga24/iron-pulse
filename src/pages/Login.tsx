@@ -64,9 +64,10 @@ const Login = () => {
         navigate("/");
       }
     } else {
+      // Sign In only shows generic "Invalid email or password" - never "email already exists"
       toast({
         title: "Login failed",
-        description: "Invalid email or password. Please try again.",
+        description: result.error || "Invalid email or password. Please try again.",
         variant: "destructive",
       });
     }

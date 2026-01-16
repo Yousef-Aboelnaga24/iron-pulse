@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Dumbbell, 
   Users, 
@@ -6,14 +6,14 @@ import {
   Award, 
   ChevronRight, 
   Check,
-  Star,
+  X,
   Zap,
   ArrowRight,
   Menu,
-  X,
   User,
   LogOut,
-  CreditCard
+  CreditCard,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlans } from "@/contexts/PlansContext";
@@ -26,13 +26,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogoutConfirmModal } from "@/components/modals/LogoutConfirmModal";
 
 const LandingPage = () => {
+  const navigate = useNavigate();
   const { plans } = usePlans();
-  const { user, isLoggedIn, isSubscribed, logout } = useUser();
+  const { user, isLoggedIn, isSubscribed, isAdmin, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   const activePlans = plans.filter((plan) => plan.status === "active");
+
+  const handleLogout = () => {
+    logout();
+    setShowLogoutModal(false);
+    navigate("/");
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const features = [
     {
@@ -98,14 +117,13 @@ const LandingPage = () => {
               {isLoggedIn ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        {user?.avatar ? (
-                          <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
-                        ) : (
-                          <User className="w-4 h-4 text-primary" />
-                        )}
-                      </div>
+                    <Button variant="ghost" className="flex items-center gap-2 p-1 pr-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                          {getInitials(user?.name || "U")}
+                        </AvatarFallback>
+                      </Avatar>
                       <span className="text-foreground">{user?.name}</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -121,15 +139,33 @@ const LandingPage = () => {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
-                    {isSubscribed && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer">
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="cursor-pointer">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isSubscribed && !isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link to="/user-dashboard" className="cursor-pointer">
-                          <User className="w-4 h-4 mr-2" />
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
                           My Dashboard
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => setShowLogoutModal(true)} 
+                      className="text-destructive cursor-pointer"
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </DropdownMenuItem>
@@ -194,9 +230,12 @@ const LandingPage = () => {
                 {isLoggedIn ? (
                   <>
                     <div className="flex items-center gap-3 py-2">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        <AvatarFallback className="bg-primary/20 text-primary">
+                          {getInitials(user?.name || "U")}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
                         <p className="text-sm font-medium text-foreground">{user?.name}</p>
                         <p className={`text-xs ${isSubscribed ? "text-primary" : "text-warning"}`}>
@@ -204,21 +243,37 @@ const LandingPage = () => {
                         </p>
                       </div>
                     </div>
-                    {isSubscribed && (
+                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </Button>
+                    </Link>
+                    {isAdmin && (
+                      <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full justify-start">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          Dashboard
+                        </Button>
+                      </Link>
+                    )}
+                    {isSubscribed && !isAdmin && (
                       <Link to="/user-dashboard" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full">
+                        <Button variant="outline" className="w-full justify-start">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
                           My Dashboard
                         </Button>
                       </Link>
                     )}
                     <Button
                       variant="ghost"
-                      className="w-full text-destructive"
+                      className="w-full justify-start text-destructive"
                       onClick={() => {
-                        logout();
                         setMobileMenuOpen(false);
+                        setShowLogoutModal(true);
                       }}
                     >
+                      <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </Button>
                   </>
@@ -459,6 +514,13 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        open={showLogoutModal}
+        onOpenChange={setShowLogoutModal}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };
