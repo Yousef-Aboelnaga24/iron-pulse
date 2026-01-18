@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Zap,
   LogOut,
+  HomeIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
@@ -27,6 +28,7 @@ const navItems = [
   { title: "Bookings", icon: BookOpen, path: "/bookings" },
   { title: "Reports", icon: BarChart3, path: "/reports" },
   { title: "Settings", icon: Settings, path: "/settings" },
+  { title: "Home", icon: HomeIcon, path: "/" }
 ];
 
 export function Sidebar() {

@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  Dumbbell, 
-  Users, 
-  Calendar, 
-  Award, 
-  ChevronRight, 
+import {
+  Dumbbell,
+  Users,
+  Calendar,
+  Award,
+  ChevronRight,
   Check,
   X,
   Zap,
@@ -13,7 +13,7 @@ import {
   User,
   LogOut,
   CreditCard,
-  LayoutDashboard
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlans } from "@/contexts/PlansContext";
@@ -35,7 +35,7 @@ const LandingPage = () => {
   const { user, isLoggedIn, isSubscribed, isAdmin, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  
+
   const activePlans = plans.filter((plan) => plan.status === "active");
 
   const handleLogout = () => {
@@ -57,7 +57,8 @@ const LandingPage = () => {
     {
       icon: Dumbbell,
       title: "Premium Equipment",
-      description: "State-of-the-art machines and free weights for every workout",
+      description:
+        "State-of-the-art machines and free weights for every workout",
     },
     {
       icon: Users,
@@ -101,13 +102,34 @@ const LandingPage = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+               <a
+                href="#home"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Home
+              </a>
+              <a
+                href="#features"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Features
               </a>
-              <a href="#plans" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="#plans"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Plans
               </a>
-              <a href="#stats" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="#trainers"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Trainers
+              </a>
+              <a
+                href="#stats"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 About
               </a>
             </div>
@@ -117,7 +139,10 @@ const LandingPage = () => {
               {isLoggedIn ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 p-1 pr-3">
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2 p-1 pr-3"
+                    >
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={user?.avatar} alt={user?.name} />
                         <AvatarFallback className="bg-primary/20 text-primary text-sm">
@@ -128,16 +153,6 @@ const LandingPage = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <div className="px-3 py-2">
-                      <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <CreditCard className="w-3 h-3 text-muted-foreground" />
-                        <span className={`text-xs ${isSubscribed ? "text-primary" : "text-warning"}`}>
-                          {isSubscribed ? "Subscribed" : "Not Subscribed"}
-                        </span>
-                      </div>
-                    </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="cursor-pointer">
@@ -162,8 +177,8 @@ const LandingPage = () => {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => setShowLogoutModal(true)} 
+                    <DropdownMenuItem
+                      onClick={() => setShowLogoutModal(true)}
                       className="text-destructive cursor-pointer"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
@@ -206,18 +221,33 @@ const LandingPage = () => {
           <div className="md:hidden bg-background border-b border-border">
             <div className="px-4 py-4 space-y-3">
               <a
+                href="#home"
+                className="block text-muted-foreground hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Home
+              </a>
+              <a
                 href="#features"
                 className="block text-muted-foreground hover:text-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Features
               </a>
+              
               <a
                 href="#plans"
                 className="block text-muted-foreground hover:text-foreground"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Plans
+              </a>
+              <a
+                href="#trainers"
+                className="block text-muted-foreground hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Trainers
               </a>
               <a
                 href="#stats"
@@ -237,29 +267,51 @@ const LandingPage = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                        <p className={`text-xs ${isSubscribed ? "text-primary" : "text-warning"}`}>
+                        <p className="text-sm font-medium text-foreground">
+                          {user?.name}
+                        </p>
+                        <p
+                          className={`text-xs ${isSubscribed ? "text-primary" : "text-warning"}`}
+                        >
                           {isSubscribed ? "Subscribed" : "Not Subscribed"}
                         </p>
                       </div>
                     </div>
-                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full justify-start">
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
                         <User className="w-4 h-4 mr-2" />
                         Profile
                       </Button>
                     </Link>
                     {isAdmin && (
-                      <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full justify-start">
+                      <Link
+                        to="/admin"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                        >
                           <LayoutDashboard className="w-4 h-4 mr-2" />
                           Dashboard
                         </Button>
                       </Link>
                     )}
                     {isSubscribed && !isAdmin && (
-                      <Link to="/user-dashboard" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full justify-start">
+                      <Link
+                        to="/user-dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                        >
                           <LayoutDashboard className="w-4 h-4 mr-2" />
                           My Dashboard
                         </Button>
@@ -284,7 +336,10 @@ const LandingPage = () => {
                         Login
                       </Button>
                     </Link>
-                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       <Button className="w-full bg-primary text-primary-foreground">
                         Register
                       </Button>
@@ -298,21 +353,33 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground mb-6">
-              Transform Your Body,
-              <br />
-              <span className="text-primary glow-text">Transform Your Life</span>
+      <section
+        id="home"
+        className="pt-32 pb-20 relative overflow-hidden bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/images/gym-option-1.jpg')",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60" />
+
+        <div className="relative z-10 container mx-auto px-6">
+          <div className="max-w-3xl">
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6">
+              UNLEASH YOUR <br />
+              <span className="text-[hsl(142_60%_40%)]">POTENTIAL</span>
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Join Iron Pulse Gym and experience world-class facilities, expert training,
-              and a community that pushes you to be your best self.
+
+            <p className="text-lg text-white/80 max-w-xl mb-8">
+              Join Iron Pulse and transform your body with expert trainers,
+              modern equipment, and powerful workouts.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+            <div className="flex flex-col sm:flex-row items-center  gap-4">
               <a href="#plans">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+                <Button
+                  size="lg"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+                >
                   View Membership Plans
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -328,7 +395,10 @@ const LandingPage = () => {
       </section>
 
       {/* Stats Section */}
-      <section id="stats" className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30">
+      <section
+        id="stats"
+        className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
@@ -342,6 +412,9 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+
+
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -366,15 +439,110 @@ const LandingPage = () => {
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+
+ {/* Trainers Section */}
+<section
+  id="trainers"
+  className="py-24 bg-background text-foreground"
+>
+  <div className="container mx-auto px-6">
+
+    {/* Title */}
+    <div className="text-center max-w-2xl mx-auto mb-16">
+      <h2 className="text-4xl md:text-5xl font-bold text-[hsl(142_60%_40%)] mb-4">
+        Our Trainers
+      </h2>
+      <p className="text-muted-foreground">
+        Meet our professional trainers who will help you reach your fitness goals.
+      </p>
+    </div>
+
+    {/* Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      {/* Trainer Card */}
+      <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
+        <img
+          src="/images/trainer-man-2.jpg"
+          alt="Ahmed Ali"
+          className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
+        />
+
+        <h3 className="text-xl font-semibold text-foreground">
+          Ahmed Ali
+        </h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          Strength Coach
+        </p>
+
+        <p className="text-sm text-muted-foreground mb-6">
+          Specialized in muscle building and strength training programs.
+        </p>
+
+        <Button className="w-full">View Profile</Button>
+      </div>
+
+      {/* Trainer Card */}
+      <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
+        <img
+          src="/images/trainer-woman.jpg"
+          alt="Sara Mohamed"
+          className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
+        />
+
+        <h3 className="text-xl font-semibold text-foreground">
+          Sara Mohamed
+        </h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          Cardio Trainer
+        </p>
+
+        <p className="text-sm text-muted-foreground mb-6">
+          Focused on weight loss and cardio endurance programs.
+        </p>
+
+        <Button className="w-full">View Profile</Button>
+      </div>
+
+      {/* Trainer Card */}
+      <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
+        <img
+          src="/images/trainer-man-2.jpg"
+          alt="Omar Hassan"
+          className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
+        />
+
+        <h3 className="text-xl font-semibold text-foreground">
+          Omar Hassan
+        </h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          CrossFit Trainer
+        </p>
+
+        <p className="text-sm text-muted-foreground mb-6">
+          Expert in high-intensity functional training.
+        </p>
+
+        <Button className="w-full">View Profile</Button>
+      </div>
+
+    </div>
+  </div>
+</section>
       {/* Plans Section */}
-      <section id="plans" className="py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20">
+      <section
+        id="plans"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-secondary/20"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
@@ -402,7 +570,9 @@ const LandingPage = () => {
                 )}
 
                 <div className="mb-4">
-                  <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {plan.name}
+                  </h3>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                     {plan.description}
                   </p>
@@ -410,8 +580,12 @@ const LandingPage = () => {
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-foreground">${plan.price}</span>
-                    <span className="text-muted-foreground">/{plan.period}</span>
+                    <span className="text-3xl font-bold text-foreground">
+                      ${plan.price}
+                    </span>
+                    <span className="text-muted-foreground">
+                      /{plan.period}
+                    </span>
                   </div>
                 </div>
 
@@ -425,7 +599,9 @@ const LandingPage = () => {
                       )}
                       <span
                         className={`text-sm ${
-                          feature.included ? "text-foreground" : "text-muted-foreground"
+                          feature.included
+                            ? "text-foreground"
+                            : "text-muted-foreground"
                         }`}
                       >
                         {feature.name}
@@ -451,7 +627,9 @@ const LandingPage = () => {
           </div>
           {activePlans.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No plans available at the moment.</p>
+              <p className="text-muted-foreground">
+                No plans available at the moment.
+              </p>
             </div>
           )}
         </div>
@@ -464,25 +642,35 @@ const LandingPage = () => {
             Ready to Start Your Journey?
           </h2>
           <p className="text-muted-foreground mb-8">
-            Join thousands of members who have transformed their lives at Iron Pulse Gym
+            Join thousands of members who have transformed their lives at Iron
+            Pulse Gym
           </p>
           {isLoggedIn ? (
             isSubscribed ? (
               <Link to="/user-dashboard">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button
+                  size="lg"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
                   Go to My Dashboard
                 </Button>
               </Link>
             ) : (
               <a href="#plans">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button
+                  size="lg"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
                   Choose a Plan
                 </Button>
               </a>
             )
           ) : (
             <Link to="/register">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 Get Started Today
               </Button>
             </Link>
@@ -502,13 +690,19 @@ const LandingPage = () => {
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 Iron Pulse Gym. All rights reserved.
+            © 2026 Iron Pulse Gym. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">
+            <a
+              href="#features"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               Features
             </a>
-            <a href="#plans" className="text-sm text-muted-foreground hover:text-foreground">
+            <a
+              href="#plans"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
               Plans
             </a>
           </div>
