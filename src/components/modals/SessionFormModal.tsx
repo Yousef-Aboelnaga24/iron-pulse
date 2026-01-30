@@ -18,175 +18,190 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+/* ================= TYPES ================= */
+
 export interface Trainer {
   id: number;
   name: string;
-  photo: string;
+  photo?: string;
 }
 
-export interface SessionData {
+export interface Category {
   id: number;
-  description: string;
-  trainer_name: string;
-  trainerAvatar: string;
-  category_name: string;
-  time: string;
-  date: string;
+  name: string;
+}
+
+export interface SessionFormData {
+  id?: number;
+  name: string;
+  trainer_id: number;
+  category_id: number;
+  start_date: string;
+  end_date: string;
   capacity: number;
-  booked: number;
-  status: "upcoming" | "full" | "available";
+  status?: "upcoming" | "ongoing" | "completed";
+  trainer_name?: string;
+  trainerPhoto?: string;
+  category_name?: string;
+  booked?: number;
 }
 
 interface SessionFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  session?: SessionData | null;
+  session?: SessionFormData | null;
   trainers: Trainer[];
-  onSave: (session: SessionData) => void;
+  categories: Category[];
+  onSave: (data: SessionFormData) => void;
 }
 
-const categories = ["Yoga", "HIIT", "Strength", "Cardio", "Dance", "Boxing", "Spinning", "Pilates"];
+/* ================= COMPONENT ================= */
 
 export function SessionFormModal({
   open,
   onOpenChange,
   session,
   trainers,
+  categories,
   onSave,
 }: SessionFormModalProps) {
   const [formData, setFormData] = useState({
-    description: "",
-    trainer_name: "",
-    category_name: "Yoga",
+    name: "",
+    trainer_id: 0,
+    category_id: 0,
     startTime: "09:00",
     endTime: "10:00",
-    capacity: 20,
+    capacity: 10,
   });
 
-  useEffect(() => {
-    const firstTrainer = trainers.length > 0 ? trainers[0].name : "";
-    if (session) {
-      const [startTime, endTime] = session.time.split(" - ").map((t) => {
-        const [time, period] = t.split(" ");
-        const [hours, minutes] = time.split(":");
-        let h = parseInt(hours);
-        if (period === "PM" && h !== 12) h += 12;
-        if (period === "AM" && h === 12) h = 0;
-        return `${h.toString().padStart(2, "0")}:${minutes}`;
-      });
+  /* ===== Helpers ===== */
+  const toTime = (dateStr?: string) => dateStr?.slice(11, 16) || "09:00";
+  const getDatePart = (dateStr?: string) =>
+    dateStr?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+  const combineDateTime = (date: string, time: string) =>
+    `${date} ${time}:00`;
 
+  /* ===== Fill form when editing ===== */
+  useEffect(() => {
+    if (session) {
       setFormData({
-        description: session.description,
-        trainer_name: session.trainer_name || firstTrainer,
-        category_name: session.category_name,
-        startTime,
-        endTime,
+        name: session.name,
+        trainer_id: session.trainer_id,
+        category_id: session.category_id,
+        startTime: toTime(session.start_date),
+        endTime: toTime(session.end_date),
         capacity: session.capacity,
       });
     } else {
       setFormData({
-        description: "",
-        trainer_name: firstTrainer,
-        category_name: "Yoga",
+        name: "",
+        trainer_id: trainers[0]?.id || 0,
+        category_id: categories[0]?.id || 0,
         startTime: "09:00",
         endTime: "10:00",
-        capacity: 20,
+        capacity: 10,
       });
     }
-  }, [session, open, trainers]);
+  }, [session, open, trainers, categories]);
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    let h = parseInt(hours);
-    const period = h >= 12 ? "PM" : "AM";
-    if (h > 12) h -= 12;
-    if (h === 0) h = 12;
-    return `${h.toString().padStart(2, "0")}:${minutes} ${period}`;
-  };
-
+  /* ===== Submit ===== */
   const handleSubmit = () => {
-    if (trainers.length === 0) {
-      alert("No trainers available. Please add a trainer first.");
+    if (!formData.name.trim()) {
+      alert("Session name is required");
       return;
     }
 
-    const selectedTrainer = trainers.find((t) => t.name === formData.trainer_name) || trainers[0];
+    if (formData.endTime <= formData.startTime) {
+      alert("End time must be after start time");
+      return;
+    }
 
-    const newSession: SessionData = {
-      id: session?.id || Date.now(),
-      description: formData.description,
-      trainer_name: formData.trainer_name,
-      trainerAvatar: selectedTrainer?.photo || "",
-      category_name: formData.category_name,
-      time: `${formatTime(formData.startTime)} - ${formatTime(formData.endTime)}`,
-      date: "Today",
-      capacity: formData.capacity,
-      booked: session?.booked || 0,
-      status: session?.status || "available",
+    const capacity = Math.min(Math.max(formData.capacity, 1), 25);
+
+    const baseDate = getDatePart(session?.start_date); // 👈 تاريخ قديم أو تاريخ النهارده
+
+    const payload: SessionFormData = {
+      id: session?.id,
+      name: formData.name,
+      trainer_id: formData.trainer_id,
+      category_id: formData.category_id,
+      start_date: combineDateTime(baseDate, formData.startTime),
+      end_date: combineDateTime(baseDate, formData.endTime),
+      capacity,
+      status: session?.status ?? "upcoming",
     };
 
-    onSave(newSession);
+    onSave(payload);
     onOpenChange(false);
   };
 
+  /* ================= UI ================= */
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>{session ? "Edit Session" : "Create New Session"}</DialogTitle>
+          <DialogTitle>
+            {session ? "Edit Session" : "Create Session"}
+          </DialogTitle>
           <DialogDescription>
-            {session ? "Update session details below." : "Fill in the details to create a new session."}
+            {session
+              ? "Update session details below."
+              : "Fill in the details to create a new session."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {/* Name */}
           <div className="space-y-2">
-            <Label htmlFor="description">Session Description</Label>
+            <Label htmlFor="name">Session Name</Label>
             <Input
-              id="description"
-              placeholder="Morning Yoga Flow"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              id="name"
+              placeholder="Morning Yoga"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
             />
           </div>
 
+          {/* Trainer + Category */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="trainer_name">Trainer</Label>
-              {trainers.length > 0 ? (
-                <Select
-                  value={formData.trainer_name}
-                  onValueChange={(v) => setFormData({ ...formData, trainer_name: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select trainer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {trainers.map((t) => (
-                      <SelectItem key={t.id} value={t.name}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <p className="text-sm text-red-500">No trainers available</p>
-              )}
+              <Label>Trainer</Label>
+              <Select
+                value={String(formData.trainer_id)}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, trainer_id: Number(v) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select trainer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {trainers.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category_name">Category</Label>
+              <Label>Category</Label>
               <Select
-                value={formData.category_name}
-                onValueChange={(v) => setFormData({ ...formData, category_name: v })}
+                value={String(formData.category_id)}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, category_id: Number(v) })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -194,38 +209,44 @@ export function SessionFormModal({
             </div>
           </div>
 
+          {/* Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startTime">Start Time</Label>
+              <Label>Start Time</Label>
               <Input
-                id="startTime"
                 type="time"
                 value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endTime">End Time</Label>
+              <Label>End Time</Label>
               <Input
-                id="endTime"
                 type="time"
                 value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
               />
             </div>
           </div>
 
+          {/* Capacity */}
           <div className="space-y-2">
-            <Label htmlFor="capacity">Capacity</Label>
+            <Label>Capacity</Label>
             <Input
-              id="capacity"
               type="number"
               min={1}
-              max={100}
+              max={25}
               value={formData.capacity}
               onChange={(e) =>
-                setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })
+                setFormData({
+                  ...formData,
+                  capacity: Number(e.target.value) || 1,
+                })
               }
             />
           </div>
@@ -235,7 +256,7 @@ export function SessionFormModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-primary text-primary-foreground">
+          <Button onClick={handleSubmit}>
             {session ? "Save Changes" : "Create Session"}
           </Button>
         </DialogFooter>

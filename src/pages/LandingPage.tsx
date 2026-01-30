@@ -33,12 +33,10 @@ import { LogoutConfirmModal } from "@/components/modals/LogoutConfirmModal";
 const LandingPage = () => {
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
-  // const { plans } = usePlans();
+  const [trainers, setTrainers] = useState([]);
   const { user, isLoggedIn, isSubscribed, isAdmin, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  // const activePlans = plans.filter((plan) => plan.status === "active");
 
   const handleLogout = () => {
     logout();
@@ -47,6 +45,18 @@ const LandingPage = () => {
   };
 
   // API
+  useEffect(() => {
+    api
+      .get("/trainers")
+      .then((res) => {
+        const trainersArray = Array.isArray(res.data)
+          ? res.data
+          : res.data.data;
+        setTrainers(trainersArray || []);
+      })
+      .catch(() => setTrainers([]));
+  }, []);
+
   useEffect(() => {
     api
       .get("/plans")
@@ -492,70 +502,29 @@ const LandingPage = () => {
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Trainer Card */}
-            <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
-              <img
-                src="/images/trainer-man-2.jpg"
-                alt="Ahmed Ali"
-                className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
-              />
 
-              <h3 className="text-xl font-semibold text-foreground">
-                Ahmed Ali
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Strength Coach
-              </p>
+            {trainers.slice(0, 3).map((trainer) => (
+              <div
+                key={trainer.id}
+                className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition"
+              >
+                <img
+                  src={trainer.photo}
+                  alt={trainer.name}
+                  className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
+                />
 
-              <p className="text-sm text-muted-foreground mb-6">
-                Specialized in muscle building and strength training programs.
-              </p>
-
-              <Button className="w-full">View Profile</Button>
-            </div>
-
-            {/* Trainer Card */}
-            <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
-              <img
-                src="/images/trainer-woman.jpg"
-                alt="Sara Mohamed"
-                className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
-              />
-
-              <h3 className="text-xl font-semibold text-foreground">
-                Sara Mohamed
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Cardio Trainer
-              </p>
-
-              <p className="text-sm text-muted-foreground mb-6">
-                Focused on weight loss and cardio endurance programs.
-              </p>
-
-              <Button className="w-full">View Profile</Button>
-            </div>
-
-            {/* Trainer Card */}
-            <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
-              <img
-                src="/images/trainer-man-2.jpg"
-                alt="Omar Hassan"
-                className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
-              />
-
-              <h3 className="text-xl font-semibold text-foreground">
-                Omar Hassan
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                CrossFit Trainer
-              </p>
-
-              <p className="text-sm text-muted-foreground mb-6">
-                Expert in high-intensity functional training.
-              </p>
-
-              <Button className="w-full">View Profile</Button>
-            </div>
+                <h3 className="text-xl font-semibold text-foreground">
+                  {trainer.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {trainer.specialties}
+                </p>
+                <Link to={`trainers/${trainer.id}`}>
+                  <Button className="w-full">View Profile</Button>
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -584,7 +553,7 @@ const LandingPage = () => {
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                     <span className="px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-md">
                       <Zap className="w-3 h-3" />
                       Most Popular

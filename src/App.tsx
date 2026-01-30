@@ -13,6 +13,7 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PlanDetails from "./pages/PlanDetails";
+import TrainerDetails from "./pages/TrainerDetails";
 import Subscribe from "./pages/Subscribe";
 import UserDashboard from "./pages/UserDashboard";
 import Profile from "./pages/Profile";
@@ -23,6 +24,7 @@ import Members from "./pages/Members";
 import Trainers from "./pages/Trainers";
 import Plans from "./pages/Plans";
 import Sessions from "./pages/Sessions";
+import Categories from "./pages/Categories";
 import Bookings from "./pages/Bookings";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -45,6 +47,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/plan/:id" element={<PlanDetails />} />
+                <Route path="/trainers/:id/" element={<TrainerDetails />} />
                 <Route path="/subscribe/:id" element={<Subscribe />} />
                 <Route path="/user-dashboard" element={<UserDashboard />} />
                 <Route path="/profile" element={<Profile />} />
@@ -87,6 +90,14 @@ const App = () => (
                   element={
                     <ProtectedAdminRoute>
                       <Sessions />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/categories"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Categories />
                     </ProtectedAdminRoute>
                   }
                 />

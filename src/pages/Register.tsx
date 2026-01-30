@@ -2,20 +2,35 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "@/api/axios";
-import { useUser } from "@/contexts/UserContext"; // 👈 استيراد الـ context
+import { useUser } from "@/contexts/UserContext";
 import {
-  Dumbbell, Eye, EyeOff, ArrowLeft, Mail, Lock, User, Loader2, Phone, Calendar,
+  Dumbbell,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Mail,
+  Lock,
+  User,
+  Loader2,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useUser(); // 👈 هنعمل login تلقائي بعد التسجيل
+  const { login } = useUser();
 
   // States
   const [name, setName] = useState("");
@@ -43,19 +58,25 @@ const Register = () => {
     const newErrors: any = {};
 
     if (!name.trim()) newErrors.name = "Name is required";
-    else if (name.trim().length < 2) newErrors.name = "Name must be at least 2 characters";
+    else if (name.trim().length < 2)
+      newErrors.name = "Name must be at least 2 characters";
 
     if (!email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email";
+    else if (!/\S+@\S+\.\S+/.test(email))
+      newErrors.email = "Please enter a valid email";
 
     if (!password) newErrors.password = "Password is required";
-    else if (password.length < 8) newErrors.password = "Password must be at least 8 characters";
+    else if (password.length < 8)
+      newErrors.password = "Password must be at least 8 characters";
 
-    if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password";
-    else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    else if (password !== confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
 
     if (!phone) newErrors.phone = "Phone is required";
-    else if (!/^\d{11}$/.test(phone)) newErrors.phone = "Phone must be 11 digits";
+    else if (!/^\d{11}$/.test(phone))
+      newErrors.phone = "Phone must be 11 digits";
 
     if (!gender) newErrors.gender = "Gender is required";
 
@@ -86,7 +107,6 @@ const Register = () => {
         role: "member",
       });
 
-      // 2️⃣ login تلقائي
       await login(email, password);
 
       toast({
@@ -94,7 +114,7 @@ const Register = () => {
         description: "Welcome to Iron Pulse!",
       });
 
-      navigate("/"); // ارجع للصفحة الرئيسية بعد التسجيل والـ login
+      navigate("/");
     } catch (error: any) {
       if (error.response?.status === 422) {
         setErrors(error.response.data.errors || {});
@@ -113,10 +133,16 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+      <div
+        className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: "1s" }}
+      />
 
       <div className="w-full max-w-md relative z-10">
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors group"
+        >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Home
         </Link>
@@ -134,8 +160,12 @@ const Register = () => {
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
 
           <div className="relative">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
-            <p className="text-muted-foreground mb-8">Join Iron Pulse and start your fitness journey</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Create Account
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              Join Iron Pulse and start your fitness journey
+            </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
@@ -152,7 +182,9 @@ const Register = () => {
                     className={`pl-11 h-12 ${errors.name ? "border-destructive" : "border-border/50"}`}
                   />
                 </div>
-                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name}</p>
+                )}
               </div>
 
               {/* Email */}
@@ -169,7 +201,9 @@ const Register = () => {
                     className={`pl-11 h-12 ${errors.email ? "border-destructive" : "border-border/50"}`}
                   />
                 </div>
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
               </div>
 
               {/* Phone */}
@@ -186,7 +220,9 @@ const Register = () => {
                     className={`pl-11 h-12 ${errors.phone ? "border-destructive" : "border-border/50"}`}
                   />
                 </div>
-                {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="text-sm text-destructive">{errors.phone}</p>
+                )}
               </div>
 
               {/* Gender */}
@@ -201,7 +237,9 @@ const Register = () => {
                     <SelectItem value="female">Female</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.gender && <p className="text-sm text-destructive">{errors.gender}</p>}
+                {errors.gender && (
+                  <p className="text-sm text-destructive">{errors.gender}</p>
+                )}
               </div>
 
               {/* Date of Birth */}
@@ -217,7 +255,11 @@ const Register = () => {
                     className={`pl-11 h-12 ${errors.dateOfBirth ? "border-destructive" : "border-border/50"}`}
                   />
                 </div>
-                {errors.dateOfBirth && <p className="text-sm text-destructive">{errors.dateOfBirth}</p>}
+                {errors.dateOfBirth && (
+                  <p className="text-sm text-destructive">
+                    {errors.dateOfBirth}
+                  </p>
+                )}
               </div>
 
               {/* Password and Confirm Password */}
@@ -238,10 +280,16 @@ const Register = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -261,21 +309,43 @@ const Register = () => {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
 
-              <Button type="submit" className="w-full h-12 mt-6" disabled={isLoading}>
-                {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Creating account...</> : "Create Account"}
+              <Button
+                type="submit"
+                className="w-full h-12 mt-6"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Creating
+                    account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </Button>
             </form>
 
             <div className="mt-8 text-center">
               <p className="text-muted-foreground">
                 Already have an account?{" "}
-                <Link to="/login" className="text-primary font-semibold hover:underline">
+                <Link
+                  to="/login"
+                  className="text-primary font-semibold hover:underline"
+                >
                   Sign In
                 </Link>
               </p>

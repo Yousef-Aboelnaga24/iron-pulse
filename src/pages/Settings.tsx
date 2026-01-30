@@ -179,7 +179,7 @@ const Settings = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
                 <Avatar className="w-20 h-20 border-2 border-primary/30">
-                  <AvatarImage src={profile.avatar} />
+                  <AvatarImage src={profile.photo} />
                   <AvatarFallback>{profile.name}</AvatarFallback>
                 </Avatar>
                 <div>

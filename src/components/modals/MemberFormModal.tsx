@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import {api} from '@/api/axios';
+import { api } from "@/api/axios";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,12 @@ export interface MemberData {
   };
 }
 
+interface Plan {
+  id: number;
+  name: string;
+  price: string;
+  period: string;
+}
 
 interface MemberFormModalProps {
   open: boolean;
@@ -48,29 +54,41 @@ interface MemberFormModalProps {
   onSave: (member: MemberData) => void;
 }
 
-const avatars = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
-];
-
-export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFormModalProps) {
+export function MemberFormModal({
+  open,
+  onOpenChange,
+  member,
+  onSave,
+}: MemberFormModalProps) {
   const [formData, setFormData] = useState<{
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
     plan: string;
-    status: "active" | "expired" | "pending";
   }>({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     plan: "basic",
-    status: "active",
   });
+
+  const [plans, setPlans] = useState<Plan[]>([]);
+  // Fetch Plan
+  const fetchPlans = async () => {
+    api
+      .get("/plans")
+      .then((res) => {
+        const plansArray = Array.isArray(res.data) ? res.data : res.date.data;
+        setPlans(plansArray || []);
+      })
+      .catch(() => setPlans([]));
+  };
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
 
   useEffect(() => {
     if (member) {
@@ -81,7 +99,6 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
         email: member.email,
         phone: member.phone,
         plan: member.plan.toLowerCase(),
-        status: member.status,
       });
     } else {
       setFormData({
@@ -90,7 +107,6 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
         email: "",
         phone: "",
         plan: "basic",
-        status: "active",
       });
     }
   }, [member, open]);
@@ -103,9 +119,15 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
       email: formData.email,
       phone: formData.phone,
       plan: formData.plan.charAt(0).toUpperCase() + formData.plan.slice(1),
-      status: formData.status,
-      joinDate: member?.joinDate || today.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      avatar: member?.avatar || avatars[Math.floor(Math.random() * avatars.length)],
+      joinDate:
+        member?.joinDate ||
+        today.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+      avatar:
+        member?.avatar || avatars[Math.floor(Math.random() * avatars.length)],
     };
     onSave(newMember);
     onOpenChange(false);
@@ -117,7 +139,9 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
         <DialogHeader>
           <DialogTitle>{member ? "Edit Member" : "Add New Member"}</DialogTitle>
           <DialogDescription>
-            {member ? "Update member details below." : "Fill in the details to register a new gym member."}
+            {member
+              ? "Update member details below."
+              : "Fill in the details to register a new gym member."}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -128,7 +152,9 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
                 id="firstName"
                 placeholder="John"
                 value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, firstName: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -137,7 +163,9 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
                 id="lastName"
                 placeholder="Doe"
                 value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastName: e.target.value })
+                }
               />
             </div>
           </div>
@@ -148,7 +176,9 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
               type="email"
               placeholder="john@example.com"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
             />
           </div>
           <div className="space-y-2">
@@ -157,24 +187,29 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
               id="phone"
               placeholder="+1 234 567 890"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="plan">Membership Plan</Label>
-              <Select value={formData.plan} onValueChange={(v) => setFormData({ ...formData, plan: v })}>
+              <Select
+                value={formData.plan}
+                onValueChange={(v) => setFormData({ ...formData, plan: v })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a plan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basic">Basic - $29/month</SelectItem>
-                  <SelectItem value="gold">Gold - $49/month</SelectItem>
-                  <SelectItem value="premium">Premium - $79/month</SelectItem>
+                  {plans.map((plan)=>(
+                    <SelectItem value={String(plan.id)} key={plan.id}>{plan.name} - ${plan.price}/{plan.period}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as "active" | "expired" | "pending" })}>
                 <SelectTrigger>
@@ -186,14 +221,17 @@ export function MemberFormModal({ open, onOpenChange, member, onSave }: MemberFo
                   <SelectItem value="expired">Expired</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-primary text-primary-foreground">
+          <Button
+            onClick={handleSubmit}
+            className="bg-primary text-primary-foreground"
+          >
             {member ? "Save Changes" : "Add Member"}
           </Button>
         </DialogFooter>

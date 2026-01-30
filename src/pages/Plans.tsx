@@ -212,7 +212,7 @@ const Plans = () => {
             style={{ animationDelay: `${(index + 1) * 100}ms` }}
           >
             {plan.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                 <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1">
                   <Zap className="w-3 h-3" />
                   Most Popular

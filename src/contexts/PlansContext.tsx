@@ -12,7 +12,6 @@ export interface PlanFeature {
   included: boolean;
 }
 
-// 🟢 حدّد النوع Period بوضوح
 export type Period = "month" | "year";
 
 export interface Plan {
@@ -21,7 +20,7 @@ export interface Plan {
   description?: string;
   price: number;
   duration: number;
-  period: Period; // استخدم النوع هنا
+  period: Period;
   features: PlanFeature[];
   popular: boolean;
   is_active: boolean;

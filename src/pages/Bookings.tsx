@@ -20,36 +20,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 const Bookings = () => {
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState<any[]>([]);
 
   useEffect(() => {
     api
       .get("/bookings")
-      .then((res) => setBookings(res.data))
+      .then((res) => {
+        const bookingsArray = Array.isArray(res.data) ? res.data : res.data.data;
+        setBookings(bookingsArray || []);
+      })
       .catch(() => setBookings([]));
   }, []);
 
-  const getAttendanceIcon = (attendance: string) => {
-    switch (attendance) {
-      case "attended":
-        return <CheckCircle className="w-5 h-5 text-success" />;
-      case "missed":
-        return <XCircle className="w-5 h-5 text-destructive" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-warning" />;
-    }
+  // دوال تحويل is_attended لـ UI
+  const getAttendanceIcon = (is_attended: boolean | null) => {
+    if (is_attended === true) return <CheckCircle className="w-5 h-5 text-success" />;
+    if (is_attended === false) return <XCircle className="w-5 h-5 text-destructive" />;
+    return <AlertCircle className="w-5 h-5 text-warning" />;
   };
 
-  const getAttendanceStatus = (attendance: string) => {
-    switch (attendance) {
-      case "attended":
-        return "active" as const;
-      case "missed":
-        return "expired" as const;
-      default:
-        return "pending" as const;
-    }
+  const getAttendanceStatus = (is_attended: boolean | null) => {
+    if (is_attended === true) return "active" as const;
+    if (is_attended === false) return "expired" as const;
+    return "pending" as const;
+  };
+
+  const getAttendanceLabel = (is_attended: boolean | null) => {
+    if (is_attended === true) return "Attended";
+    if (is_attended === false) return "Missed";
+    return "Pending";
   };
 
   return (
@@ -69,10 +70,7 @@ const Bookings = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div
-          className="stat-card card-glow opacity-0 animate-fade-in"
-          style={{ animationDelay: "100ms" }}
-        >
+        <div className="stat-card card-glow opacity-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-success/20">
               <CheckCircle className="w-6 h-6 text-success" />
@@ -83,10 +81,7 @@ const Bookings = () => {
             </div>
           </div>
         </div>
-        <div
-          className="stat-card card-glow opacity-0 animate-fade-in"
-          style={{ animationDelay: "200ms" }}
-        >
+        <div className="stat-card card-glow opacity-0 animate-fade-in" style={{ animationDelay: "200ms" }}>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-warning/20">
               <AlertCircle className="w-6 h-6 text-warning" />
@@ -97,10 +92,7 @@ const Bookings = () => {
             </div>
           </div>
         </div>
-        <div
-          className="stat-card card-glow opacity-0 animate-fade-in"
-          style={{ animationDelay: "300ms" }}
-        >
+        <div className="stat-card card-glow opacity-0 animate-fade-in" style={{ animationDelay: "300ms" }}>
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-destructive/20">
               <XCircle className="w-6 h-6 text-destructive" />
@@ -114,11 +106,7 @@ const Bookings = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs
-        defaultValue="all"
-        className="opacity-0 animate-fade-in"
-        style={{ animationDelay: "400ms" }}
-      >
+      <Tabs defaultValue="all" className="opacity-0 animate-fade-in" style={{ animationDelay: "400ms" }}>
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <TabsList className="bg-secondary">
             <TabsTrigger value="all">All Bookings</TabsTrigger>
@@ -126,6 +114,7 @@ const Bookings = () => {
             <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
             <TabsTrigger value="past">Past</TabsTrigger>
           </TabsList>
+
           <div className="flex gap-2 ml-auto">
             <Select>
               <SelectTrigger className="w-[160px] bg-card">
@@ -152,31 +141,19 @@ const Bookings = () => {
           </div>
         </div>
 
+        {/* All Bookings Table */}
         <TabsContent value="all">
-          {/* Bookings Table */}
           <div className="stat-card card-glow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Member
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Session
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Date & Time
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Location
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Attendance
-                    </th>
-                    <th className="text-right py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Actions
-                    </th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Member</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Session</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Date & Time</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Location</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Attendance</th>
+                    <th className="text-right py-4 px-4 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,7 +166,7 @@ const Bookings = () => {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border-2 border-border">
-                            <AvatarImage src={booking.member.avatar} />
+                            <AvatarImage src={booking.member.photo} />
                             <AvatarFallback className="bg-primary text-primary-foreground">
                               {booking.member.name
                                 .split(" ")
@@ -197,53 +174,44 @@ const Bookings = () => {
                                 .join("")}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium text-foreground">
-                            {booking.member.name}
-                          </span>
+                          <span className="font-medium text-foreground">{booking.member.name}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div>
-                          <p className="font-medium text-foreground">
-                            {booking.session}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {booking.trainer}
-                          </p>
+                          <p className="font-medium text-foreground">{booking.session.name}</p>
+                          <p className="text-sm text-muted-foreground">{booking.session.trainer.name}</p>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 text-sm text-foreground">
                             <Calendar className="w-3 h-3" />
-                            {booking.date}
+                            {booking.booking_date.split(" ")[0]}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            {booking.time}
+                            {booking.booking_date.split(" ")[1]}
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-3 h-3" />
-                          {booking.location}
+                          Gym Location
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          {getAttendanceIcon(booking.attendance)}
-                          <StatusBadge
-                            variant={getAttendanceStatus(booking.attendance)}
-                          >
-                            {booking.attendance.charAt(0).toUpperCase() +
-                              booking.attendance.slice(1)}
+                          {getAttendanceIcon(booking.is_attended)}
+                          <StatusBadge variant={getAttendanceStatus(booking.is_attended)}>
+                            {getAttendanceLabel(booking.is_attended)}
                           </StatusBadge>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-end gap-2">
-                          {booking.attendance === "pending" && (
+                          {booking.is_attended === null && (
                             <>
                               <Button
                                 size="sm"
@@ -261,12 +229,8 @@ const Bookings = () => {
                               </Button>
                             </>
                           )}
-                          {booking.attendance !== "pending" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 px-3"
-                            >
+                          {booking.is_attended !== null && (
+                            <Button size="sm" variant="outline" className="h-8 px-3">
                               View Details
                             </Button>
                           )}
@@ -280,27 +244,22 @@ const Bookings = () => {
           </div>
         </TabsContent>
 
+        {/* Empty Tabs */}
         <TabsContent value="today">
           <div className="stat-card card-glow text-center py-12">
-            <p className="text-muted-foreground">
-              Today's bookings will appear here
-            </p>
+            <p className="text-muted-foreground">Today's bookings will appear here</p>
           </div>
         </TabsContent>
 
         <TabsContent value="upcoming">
           <div className="stat-card card-glow text-center py-12">
-            <p className="text-muted-foreground">
-              Upcoming bookings will appear here
-            </p>
+            <p className="text-muted-foreground">Upcoming bookings will appear here</p>
           </div>
         </TabsContent>
 
         <TabsContent value="past">
           <div className="stat-card card-glow text-center py-12">
-            <p className="text-muted-foreground">
-              Past bookings will appear here
-            </p>
+            <p className="text-muted-foreground">Past bookings will appear here</p>
           </div>
         </TabsContent>
       </Tabs>

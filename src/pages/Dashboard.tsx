@@ -14,7 +14,6 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { MembershipChart } from "@/components/dashboard/MembershipChart";
 import { SessionsOverview } from "@/components/dashboard/SessionsOverview";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
-import path from "path";
 
 const Dashboard = () => {
   const { profile } = useAdmin();
